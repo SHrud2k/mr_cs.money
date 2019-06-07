@@ -42,7 +42,7 @@ bot.on("message", async message => {
         .addField("Please try again, with this example:","csm.report {USER_TO_REPORT} {REASON_MESSAGE}");
         if(userMessage){
             const content = userMessage[1].trim();
-            const [userId, reportReason] = content.split(" ").filter(field => !!field);
+            const [userId, reportReason] = content.replace(/ */g," ").split(" ");
             if (!userId || !reportReason) {
                 return (message.reply(embedMessage));
             }
