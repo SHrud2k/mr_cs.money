@@ -4,8 +4,8 @@ const Discord = require("discord.js");
 const bot = new Discord.Client({disableEveryone: true});
 
 bot.on("ready", async () => {
-    console.log('${bot.user.username} online');
-    bot.user.setGame("Here to help you!");
+    console.log(`${bot.user.username} online`);
+    bot.user.setActivity("Under construction");
 });
 
 bot.on("message", async message => {
@@ -30,6 +30,27 @@ bot.on("message", async message => {
         .addField("Hello, my name is "+ bot.user.username + ", I am here to help you, please be aware that I am still learning to do stuff ;)", "CS.MONEY Developer Team");
         
         return message.channel.send(botembed);
+    }
+
+    if(cmd === `${prefix}report`){
+        let userReporterId = message.author.id;
+        let userMessage = message.content.match(/csm.report(.*)/);
+        let messageId = message.author.userMessage;
+        console.log(message.author.lastMessageID);
+        let embedMessage = new Discord.RichEmbed()
+        .setDescription("Wrong parametres!")
+        .addField("Please try again, with this example:","csm.report {USER_TO_REPORT} {REASON_MESSAGE}");
+        if(userMessage){
+            const content = userMessage[1].trim();
+            const [userId, reportReason] = content.split(" ").filter(field => !!field);
+            if (!userId || !reportReason) {
+                return (message.reply(embedMessage));
+            }
+            console.log(userId);
+            message.channel.send("Report for "+userId+" was sent successfully report reason is **"+reportReason+"**");
+            bot.channels.get("581891514163134474").send("**Report on:** "+userId+"\n**From:** "+userReporterId+"\n**Reason:** "+reportReason);
+            return (message.delete(2000));
+        }
     }
 
     if(message.isMentioned('574390338123333633')) {
