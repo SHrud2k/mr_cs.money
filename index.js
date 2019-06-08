@@ -4,6 +4,7 @@ const Discord = require("discord.js");
 const bot = new Discord.Client({disableEveryone: true});
 
 bot.on("ready", async () => {
+    let prefix = botconfig.prefix;
     console.log(`${bot.user.username} online`);
     bot.user.setActivity(`${prefix}help`);
 });
