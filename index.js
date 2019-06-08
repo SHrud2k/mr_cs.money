@@ -5,7 +5,7 @@ const bot = new Discord.Client({disableEveryone: true});
 
 bot.on("ready", async () => {
     console.log(`${bot.user.username} online`);
-    bot.user.setActivity("csm.help");
+    bot.user.setActivity(`${prefix}help`);
 });
 
 bot.on("message", async message => {
