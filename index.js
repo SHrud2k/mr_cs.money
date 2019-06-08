@@ -21,9 +21,9 @@ bot.on("message", async message => {
         let botAvatar = bot.user.displayAvatarURL;
         let embedMessage = new Discord.RichEmbed()
         .setDescription("Bot usage commands.")
-        .addField("csm.","Prefix to use our bot.")
-        .addField("csm.info","Small info about the bot and server")
-        .addField("csm.report","Report a user, that violates our server rules: \ncsm.report @User_to_report 'report_reason'")
+        .addField(`${prefix}`,"Prefix to use our bot.")
+        .addField(`${prefix}info`,"Small info about the bot and server")
+        .addField(`${prefix}report`,`Report a user, that violates our server rules: \n${prefix}report @User_to_report 'report_reason'`)
         .setColor("#d45f93")
         .setThumbnail(botAvatar)
         return message.channel.send(embedMessage);
@@ -59,7 +59,7 @@ bot.on("message", async message => {
             }
             message.channel.send("Report for "+userId+" was sent successfully\nReport reason is **"+reportReason+"**");
             bot.channels.get("581891514163134474").send("Report for: "+userId+"\nReport from: <@!"+userReporterId+">\nReport reason: "+reportReason+"\nReport message Id: "+messageId);
-            message.delete(5000);
+            return (message.delete(5000));
         }
     }
 
@@ -76,6 +76,19 @@ bot.on("message", async message => {
             files: ["./support_placement.png"],
         })
     }
+
+    if(cmd === `${prefix}userroll`) {
+        if(message.member.roles.find("name", "CS.Money")){
+        var user = message.guild.members.random();
+        message.delete(100);
+        return (message.channel.send(`Congrats ${user.user}, you have won our small giveaway!`));
+        }
+        else {
+            message.delete(100);
+            return (message.channel.send("You are not allowed to use this command."))
+        }
+    }
+
 });
 
 bot.login(botconfig.token);
