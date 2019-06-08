@@ -45,7 +45,6 @@ bot.on("message", async message => {
         let userMessage = message.content.match(/csm.report(.*)/);
         let messageId = message.id;
         let messageTime = message.createdTimestamp;
-        console.log(messageTime);
         let embedMessage = new Discord.RichEmbed()
         .setDescription("Wrong parametres!")
         .addField("Please try again, with this example:","csm.report {USER_TO_REPORT} {REASON_MESSAGE}");
@@ -53,7 +52,6 @@ bot.on("message", async message => {
             const content = userMessage[1].trim().replace(/\s{2,}/g," ");
             const [userId] = content.split(" ");
             const reportReason = content.split(" ").slice(1).join(" ");
-            console.log(userId)
             if (!userId || !reportReason) {
                 return (message.reply(embedMessage));
             }
