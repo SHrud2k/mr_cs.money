@@ -5,7 +5,7 @@ const bot = new Discord.Client({disableEveryone: true});
 
 bot.on("ready", async () => {
     console.log(`${bot.user.username} online`);
-    bot.user.setActivity("Under construction");
+    bot.user.setActivity("csm.help");
 });
 
 bot.on("message", async message => {
@@ -18,7 +18,15 @@ bot.on("message", async message => {
     let args = messageArray.slice(1);
 
     if(cmd === `${prefix}help`){
-        return message.channel.send("Under construction");
+        let botAvatar = bot.user.displayAvatarURL;
+        let embedMessage = new Discord.RichEmbed()
+        .setDescription("Bot usage commands.")
+        .addField("csm.","Prefix to use our bot.")
+        .addField("csm.info","Small info about the bot and server")
+        .addField("csm.report","Report a user, that violates our server rules: \ncsm.report @User_to_report 'report_reason'")
+        .setColor("#d45f93")
+        .setThumbnail(botAvatar)
+        return message.channel.send(embedMessage);
     }
 
     if(cmd === `${prefix}info`){
@@ -35,25 +43,27 @@ bot.on("message", async message => {
     if(cmd === `${prefix}report`){
         let userReporterId = message.author.id;
         let userMessage = message.content.match(/csm.report(.*)/);
-        let messageId = message.author.userMessage;
-        console.log(message.author.lastMessageID);
+        let messageId = message.id;
+        let messageTime = message.createdTimestamp;
+        console.log(messageTime);
         let embedMessage = new Discord.RichEmbed()
         .setDescription("Wrong parametres!")
         .addField("Please try again, with this example:","csm.report {USER_TO_REPORT} {REASON_MESSAGE}");
         if(userMessage){
-            const content = userMessage[1].trim();
-            const [userId, reportReason] = content.replace(/ */g," ").split(" ");
+            const content = userMessage[1].trim().replace(/\s{2,}/g," ");
+            const [userId] = content.split(" ");
+            const reportReason = content.split(" ").slice(1).join(" ");
+            console.log(userId)
             if (!userId || !reportReason) {
                 return (message.reply(embedMessage));
             }
-            console.log(userId);
-            message.channel.send("Report for "+userId+" was sent successfully report reason is **"+reportReason+"**");
-            bot.channels.get("581891514163134474").send("**Report on:** "+userId+"\n**From:** "+userReporterId+"\n**Reason:** "+reportReason);
-            return (message.delete(2000));
+            message.channel.send("Report for "+userId+" was sent successfully\nReport reason is **"+reportReason+"**");
+            bot.channels.get("581891514163134474").send("Report for: "+userId+"\nReport from: <@!"+userReporterId+">\nReport reason: "+reportReason+"\nReport message Id: "+messageId);
+            message.delete(5000);
         }
     }
 
-    if(message.isMentioned('574390338123333633')) {
+    if(message.isMentioned(message.guild.roles.find(role => role.name === "Support"))) {
         let botAvatar = bot.user.displayAvatarURL;
         let embedResponse = new Discord.RichEmbed()
         .setThumbnail(botAvatar)
