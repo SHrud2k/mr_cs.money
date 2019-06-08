@@ -33,18 +33,25 @@ bot.on("message", async message => {
     }
 
     if(cmd === `${prefix}report`){
-        if(!args.length < 1){
-            let reportedUserId = args[0].replace(/[\\<>@#&!]/g, "");
-        
-            let role = message.guild.roles.find(role => role.name === "Reporter");
-            let memberArray = role.members.array();
-            let reason = messageArray.slice(2).join(" ");
-            for(var member in memberArray){
-                memberArray[member].user.send(`<@${reportedUserId}> got reported for "${reason}" from  <@${message.author.id}>`);
-            }
-            message.delete();
-            return message.channel.send(`<@${reportedUserId}> got successfully reported, reason: "${reason}"`)
+        let userReporterId = message.author.id;
+        let messageId = message.id;
+        message.delete();
+        let embedMessage = new Discord.RichEmbed()
+        .setDescription("Wrong parametres!")
+        .addField("Please try again, with this example:",`${prefix}.report {USER_TO_REPORT} {REASON_MESSAGE}`);
+        if(args.length < 1){
+            return (message.reply(embedMessage));
         }
+        let userId = args[0].replace(/[\\<>@#&!]/g, "");    
+        if(isNaN(userId)){
+            return (message.reply(embedMessage));
+        }
+        const reportReason = messageArray.slice(2).join(" ");
+        message.channel.send(`Report for: <@!${userId}> was sent successfully\nReport reason is **${reportReason}**`).
+        then(
+        msg=> msg.delete(5000)
+        );
+        bot.channels.find("name","reports").send(`Report for: <@!${userId}>\nReport from: <@!${userReporterId}>\nReport reason: ${reportReason}\nReport message Id: ${messageId}`);
     }
 
     if(message.isMentioned(message.guild.roles.find(role => role.name === "Support"))) {
