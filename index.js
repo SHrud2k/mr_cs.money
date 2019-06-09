@@ -1,5 +1,6 @@
 const botconfig = require("./botconfig.json");
 const Discord = require("discord.js");
+const got = require('got');
 
 const bot = new Discord.Client({disableEveryone: true});
 
@@ -54,6 +55,62 @@ bot.on("message", async message => {
         bot.channels.find("name","reports").send(`Report for: <@!${userId}>\nReport from: <@!${userReporterId}>\nReport reason: ${reportReason}\nReport message Id: ${messageId}`);
     }
 
+    if(cmd === `${prefix}status`){
+        let skinName = args.join(" ");
+        message.delete();
+        if(!(skinName.includes("|") && skinName.includes("(") && skinName.includes(")"))){
+            got(`https://cs.money/get_auto_complete?part_name=${encodeURIComponent(skinName)}&appid=730`, { json: true }).then(response => {
+                let data = response.body;
+                if(data.length == 0){
+                    return message.reply("skin not found"); 
+                }
+                let highestIndex = 0;
+                let highestRate = 0;
+                for(var i = 0; i < data.length; i++){
+                    let similarityscore = similarity(skinName,data[i]);
+                    if(similarityscore > highestRate){
+                        highestRate = similarityscore;
+                        highestIndex = i;
+                    }
+                }
+                skinName = encodeURIComponent(data[highestIndex]);
+                got(`https://cs.money/check_skin_status?market_hash_name=${skinName}&appid=730`, { json: true }).then(response => {
+                    let data = response.body;
+                    
+                    let botAvatar = bot.user.displayAvatarURL;
+                    let embedResponse = new Discord.RichEmbed()
+                    .setThumbnail(botAvatar)
+                    .setDescription(`Skin Status of ${decodeURIComponent(skinName)}`)
+                    .setColor("#d45f93")
+                    .addField(`Trade status: ${data.type} \nAmount till overstock: ${data.overstock_difference}`,`[Get ${decodeURIComponent(skinName)} on CS.Money](https://cs.money/?s=float#skin_name_buy=${encodeURIComponent(skinName)}`)
+            
+                    message.reply({
+                        embed: embedResponse,
+                    })
+                })
+            })
+        }else{
+            skinName = encodeURIComponent(skinName);
+            got(`https://cs.money/check_skin_status?market_hash_name=${skinName}&appid=730`, { json: true }).then(response => {
+                let data = response.body;
+
+                let botAvatar = bot.user.displayAvatarURL;
+                let embedResponse = new Discord.RichEmbed()
+                .setThumbnail(botAvatar)
+                .setDescription(`Skin Status of ${decodeURIComponent(skinName)}`)
+                .setColor("#d45f93")
+                .addField(`Trade status: ${data.type} \nAmount till overstock: ${data.overstock_difference}`,`[Get ${decodeURIComponent(skinName)} on CS.Money](https://cs.money/?s=float#skin_name_buy=${encodeURIComponent(skinName)}`)
+        
+                message.reply({
+                    embed: embedResponse,
+                })
+            }).catch(error => {
+                return message.reply("skin not found");
+              });
+        }
+        
+    }
+
     if(message.isMentioned(message.guild.roles.find(role => role.name === "Support"))) {
         let botAvatar = bot.user.displayAvatarURL;
         let embedResponse = new Discord.RichEmbed()
@@ -67,7 +124,48 @@ bot.on("message", async message => {
             files: ["./support_placement.png"],
         })
     }
-    
+   
 });
+
+function similarity(s1, s2) {
+    var longer = s1;
+    var shorter = s2;
+    if (s1.length < s2.length) {
+      longer = s2;
+      shorter = s1;
+    }
+    var longerLength = longer.length;
+    if (longerLength == 0) {
+      return 1.0;
+    }
+    return (longerLength - editDistance(longer, shorter)) / parseFloat(longerLength);
+}
+
+function editDistance(s1, s2) {
+    s1 = s1.toLowerCase();
+    s2 = s2.toLowerCase();
+  
+    var costs = new Array();
+    for (var i = 0; i <= s1.length; i++) {
+      var lastValue = i;
+      for (var j = 0; j <= s2.length; j++) {
+        if (i == 0)
+          costs[j] = j;
+        else {
+          if (j > 0) {
+            var newValue = costs[j - 1];
+            if (s1.charAt(i - 1) != s2.charAt(j - 1))
+              newValue = Math.min(Math.min(newValue, lastValue),
+                costs[j]) + 1;
+            costs[j - 1] = lastValue;
+            lastValue = newValue;
+          }
+        }
+      }
+      if (i > 0)
+        costs[s2.length] = lastValue;
+    }
+    return costs[s2.length];
+}
 
 bot.login(botconfig.token);
