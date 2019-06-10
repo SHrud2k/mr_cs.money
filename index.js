@@ -36,6 +36,10 @@ bot.on("message", async message => {
                 `${prefix}status`,
                 `Check for the overstock status of your favorite skin\nUsage: ${prefix}status STATTRACK_STATUS FULL_NAME CONDITION\nFor example: ${prefix}status stat ak-47 redline minimal wear`
             )
+            .addField(
+                `${prefix}shop`,
+                `Post's your cs.money shop on the specific channel\n Usage: ${prefix}shop https://cs.money/#sellerid=YOUR_ID (and also attach an image of your shop)`
+            )
             .setColor("#d45f93")
             .setThumbnail(botAvatar);
         return message.channel.send(embedMessage);
@@ -232,6 +236,40 @@ bot.on("message", async message => {
                     return message.reply("skin not found");
                 });
         }
+    }
+
+    if (cmd === `${prefix}shop`) {
+        if (
+            !message.member.roles.find(
+                "name",
+                "Trader" || "Senior Trader" || "Contributor"
+            )
+        )
+            return message.reply("You are not allowed to use this command ;)");
+        let messageAuthor = message.author.id;
+        let authorAvatar = message.author.displayAvatarURL;
+        let attachmentArray = message.attachments.array()[0];
+        let shopLink = message.content
+            .split(" ")
+            .slice(1)
+            .join(" ");
+        console.log("link", shopLink);
+        if (!shopLink)
+            return message.reply("You did not specify your sellerid.");
+        if (!attachmentArray)
+            return message.reply("You did not specify your shop image.");
+        let embedShop = new Discord.RichEmbed()
+            .setDescription(`<@!${messageAuthor}> CS.Money shop`)
+            .addField("Link to the shop:", `${shopLink}`)
+            .setThumbnail(`${authorAvatar}`)
+            .setImage(attachmentArray.url);
+        console.log(attachmentArray, shopLink);
+        if (!shopLink.match(/https?\:\/\/([\w\d\.]+)?cs\.money\/#sellerid=\d+/))
+            return message.reply(
+                "Please use correct shop link, for example https://cs.money/#sellerid=YOUR_ID"
+            );
+        bot.channels.get("581845954567864330").send(embedShop);
+        message.delete(200);
     }
 });
 
