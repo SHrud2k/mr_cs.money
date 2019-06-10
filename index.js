@@ -23,7 +23,9 @@ bot.on("message", async message => {
     if (cmd === `${prefix}help`) {
         let botAvatar = bot.user.displayAvatarURL;
         let embedMessage = new Discord.RichEmbed()
-            .setDescription("Bot usage commands.")
+            .setDescription(
+                "Be aware that some of the commands can only be used in channel dedicated for the bot."
+            )
             .addField(`${prefix}`, "Prefix to use our bot.")
             .addField(`${prefix}info`, "Small info about the bot and server")
             .addField(
@@ -136,6 +138,10 @@ bot.on("message", async message => {
     }
 
     if (cmd === `${prefix}status`) {
+        if (message.channel.name != "mr-csmoney")
+            return message.reply(
+                "This command can only be used in bot's channel."
+            );
         let skinName = args.join(" ");
         message.delete();
         if (
