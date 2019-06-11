@@ -269,10 +269,14 @@ bot.on("message", async message => {
 
     if (cmd === `${prefix}shop`) {
         if (
-            !message.member.roles.find(
-                "name",
-                "Trader" || "Senior Trader" || "Contributor" || "CS.Money"
-            )
+            !message.member.roles.some(role => {
+                return [
+                    "Trader",
+                    "Senior Trader",
+                    "Contributor",
+                    "CS.Money"
+                ].includes(role.name);
+            })
         )
             return message.reply("You are not allowed to use this command ;)");
         let messageAuthor = message.author.id;
@@ -282,7 +286,6 @@ bot.on("message", async message => {
             .split(" ")
             .slice(1)
             .join(" ");
-        console.log("link", shopLink);
         if (!shopLink)
             return message.reply("You did not specify your sellerid.");
         if (!attachmentArray)
@@ -292,12 +295,11 @@ bot.on("message", async message => {
             .addField("Link to the shop:", `${shopLink}`)
             .setThumbnail(`${authorAvatar}`)
             .setImage(attachmentArray.url);
-        console.log(attachmentArray, shopLink);
         if (!shopLink.match(/https?\:\/\/([\w\d\.]+)?cs\.money\/#sellerid=\d+/))
             return message.reply(
                 "Please use correct shop link, for example https://cs.money/#sellerid=YOUR_ID"
             );
-        bot.channels.find("name", "sellerid-showcase").send(embedShop);
+        bot.channels.find("name", "🔄sellerid-showcase").send(embedShop);
         message.delete(200);
     }
 });
