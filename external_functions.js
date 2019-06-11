@@ -6,6 +6,7 @@ const store = require("nedb");
 const db = new store({ filename: "database.db", autoload: true });
 
 let bot;
+
 const prefix = botconfig.prefix;
 
 function similarity(s1, s2) {
