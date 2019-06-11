@@ -94,7 +94,6 @@ bot.on("message", async message => {
                     "**"
             );
             bot.channels
-                .get("581891514163134474")
                 .find("name", "reports")
                 .send(
                     "Report for: " +
@@ -214,7 +213,7 @@ bot.on("message", async message => {
             let highestIndex = 0;
             let highestRate = 0;
             for (var i = 0; i < data.length; i++) {
-                let similarityscore = similarity(skinName, data[i]);
+                let similarityscore = exf.similarity(skinName, data[i]);
                 if (similarityscore > highestRate) {
                     highestRate = similarityscore;
                     highestIndex = i;
