@@ -3,7 +3,7 @@ const botconfig = require("./botconfig.json");
 const got = require("got");
 var fs = require("fs");
 const store = require("nedb");
-const db = new store({ filename: "database.db", autoload: true });
+const db = new store({filename: "database.db", autoload: true});
 
 let bot;
 
@@ -99,22 +99,35 @@ function checkItemStatus2(docs) {
             `https://cs.money/check_skin_status?market_hash_name=${
                 currentDoc.skin
             }&appid=730`,
-            { json: true }
+            {json: true}
         )
             .then(response => {
                 let data = response.body;
                 if (data.type == "Tradable") {
+                    console.log(currentDoc);
+                    var userPromises = [];
                     for (var idIndex in currentDoc.ids) {
-                        bot.fetchUser(currentDoc.ids[idIndex]).then(user =>
-                            user.send(getRichEmbed(data, currentDoc.skin))
+                        userPromises.push(
+                            bot
+                                .fetchUser(currentDoc.ids[idIndex])
+                                .then(user => {
+                                    console.log(user.id + currentDoc.skin);
+                                    user.send(
+                                        getRichEmbed(data, currentDoc.skin)
+                                    );
+                                })
                         );
                     }
-                    db.remove({ _id: currentDoc._id }, {}, function(
-                        err,
-                        numRemoved
-                    ) {});
+                    Promise.all(userPromises).then(function() {
+                        db.remove({_id: currentDoc._id}, {}, function(
+                            err,
+                            numRemoved
+                        ) {});
+                        checkItemStatus2(docs.slice(1));
+                    });
+                } else {
+                    checkItemStatus2(docs.slice(1));
                 }
-                checkItemStatus2(docs.slice(1));
             })
             .catch(error => {
                 console.log(error);
@@ -138,7 +151,7 @@ function checkItemStatus() {
                 `https://cs.money/check_skin_status?market_hash_name=${
                     docs[docIndex].skin
                 }&appid=730`,
-                { json: true }
+                {json: true}
             )
                 .then(response => {
                     let data = response.body;
@@ -151,7 +164,7 @@ function checkItemStatus() {
                                     )
                             );
                         }
-                        db.remove({ _id: docs[docIndex]._id }, {}, function(
+                        db.remove({_id: docs[docIndex]._id}, {}, function(
                             err,
                             numRemoved
                         ) {});
