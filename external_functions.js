@@ -3,8 +3,8 @@ const botconfig = require("./botconfig.json");
 const got = require("got");
 var fs = require("fs");
 const store = require("nedb");
-const db = new store({ filename: "./database.db", autoload: true });
 
+let db;
 let bot;
 
 const prefix = botconfig.prefix;
@@ -186,7 +186,8 @@ function checkItemStatus() {
 //     startItemCheck,
 //     checkItemStatus
 //};
-module.exports = function(_bot) {
+module.exports = function(_bot,_db) {
+    db = _db;
     bot = _bot;
     return {
         similarity,
