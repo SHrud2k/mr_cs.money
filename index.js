@@ -295,7 +295,7 @@ bot.on("message", async message => {
             return message.reply(
                 "Please use correct shop link, for example https://cs.money/#sellerid=YOUR_ID"
             );
-        bot.channels.get("581845954567864330").send(embedShop);
+        bot.channels.find("name", "sellerid-showcase").send(embedShop);
         message.delete(200);
     }
 });
