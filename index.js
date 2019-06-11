@@ -18,6 +18,13 @@ const db = new store({filename: "database.db", autoload: true});
 
 const prefix = botconfig.prefix;
 
+const exf = require("./external_functions")(bot);
+var fs = require("fs");
+const store = require("nedb");
+const db = new store({filename: "database.db", autoload: true});
+
+const prefix = botconfig.prefix;
+
 bot.on("ready", async () => {
     let prefix = botconfig.prefix;
     console.log(`${bot.user.username} online`);
