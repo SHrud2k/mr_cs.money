@@ -1,12 +1,14 @@
 const botconfig = require("./botconfig.json");
 const Discord = require("discord.js");
 const got = require("got");
-const exf = require("./external_functions");
+
+const bot = new Discord.Client({ disableEveryone: true });
+
+const exf = require("./external_functions")(bot);
 var fs = require("fs");
 const store = require("nedb");
 const db = new store({ filename: "database.db", autoload: true });
 
-const bot = new Discord.Client({ disableEveryone: true });
 const prefix = botconfig.prefix;
 
 bot.on("ready", async () => {
@@ -293,7 +295,7 @@ bot.on("message", async message => {
             return message.reply(
                 "Please use correct shop link, for example https://cs.money/#sellerid=YOUR_ID"
             );
-        bot.channels.get("581845954567864330").send(embedShop);
+        bot.channels.find("name", "sellerid-showcase").send(embedShop);
         message.delete(200);
     }
 });

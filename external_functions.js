@@ -5,7 +5,8 @@ var fs = require("fs");
 const store = require("nedb");
 const db = new store({ filename: "database.db", autoload: true });
 
-const bot = new Discord.Client({ disableEveryone: true });
+let bot;
+
 const prefix = botconfig.prefix;
 
 function similarity(s1, s2) {
@@ -163,12 +164,24 @@ function checkItemStatus() {
     });
 }
 
-module.exports = {
-    similarity,
-    editDistance,
-    getImageUrlFromName,
-    getRichEmbed,
-    checkItemStatus2,
-    startItemCheck,
-    checkItemStatus
+// module.exports = {
+//     similarity,
+//     editDistance,
+//     getImageUrlFromName,
+//     getRichEmbed,
+//     checkItemStatus2,
+//     startItemCheck,
+//     checkItemStatus
+//};
+module.exports = function(_bot) {
+    bot = _bot;
+    return {
+        similarity,
+        editDistance,
+        getImageUrlFromName,
+        getRichEmbed,
+        checkItemStatus2,
+        startItemCheck,
+        checkItemStatus
+    };
 };
