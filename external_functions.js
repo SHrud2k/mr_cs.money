@@ -1,8 +1,12 @@
 const Discord = require("discord.js");
+const botconfig = require("./botconfig.json");
 const got = require("got");
 var fs = require("fs");
 const store = require("nedb");
 const db = new store({ filename: "database.db", autoload: true });
+
+const bot = new Discord.Client({ disableEveryone: true });
+const prefix = botconfig.prefix;
 
 function similarity(s1, s2) {
     var longer = s1;
@@ -55,8 +59,7 @@ function getImageUrlFromName(skinName) {
 
 function getRichEmbed(data, skinName) {
     if (data.overstock_difference == undefined) {
-        let botAvatar = bot.user.displayAvatarURL;
-
+        //let botAvatar = bot.user.displayAvatarURL;
         let embedResponse = new Discord.RichEmbed()
             .setThumbnail(getImageUrlFromName(skinName))
             .setDescription(`Skin Status of ${skinName}`)
@@ -71,7 +74,7 @@ function getRichEmbed(data, skinName) {
             );
         return embedResponse;
     } else {
-        let botAvatar = bot.user.displayAvatarURL;
+        //let botAvatar = bot.user.displayAvatarURL;
         let embedResponse = new Discord.RichEmbed()
             .setThumbnail(getImageUrlFromName(skinName))
             .setDescription(`Skin Status of ${skinName}`)
