@@ -11,20 +11,6 @@ const db = new store({ filename: "database.db", autoload: true });
 
 const prefix = botconfig.prefix;
 
-const exf = require("./external_functions")(bot);
-var fs = require("fs");
-const store = require("nedb");
-const db = new store({filename: "database.db", autoload: true});
-
-const prefix = botconfig.prefix;
-
-const exf = require("./external_functions")(bot);
-var fs = require("fs");
-const store = require("nedb");
-const db = new store({filename: "database.db", autoload: true});
-
-const prefix = botconfig.prefix;
-
 bot.on("ready", async () => {
     let prefix = botconfig.prefix;
     console.log(`${bot.user.username} online`);
@@ -60,6 +46,10 @@ bot.on("message", async message => {
             .addField(
                 `${prefix}shop`,
                 `Post's your cs.money shop on the specific channel\n Usage: ${prefix}shop https://cs.money/#sellerid=YOUR_ID (and also attach an image of your shop)`
+            )
+            .addField(
+                `${prefix}notify`,
+                "Want to be notified when your favourite skin will get out of overstock? You can by executing this command."
             )
             .setColor("#d45f93")
             .setThumbnail(botAvatar);
@@ -158,7 +148,7 @@ bot.on("message", async message => {
                 `https://cs.money/get_auto_complete?part_name=${encodeURIComponent(
                     skinName
                 )}&appid=730`,
-                {json: true}
+                { json: true }
             ).then(response => {
                 let data = response.body;
                 if (data.length == 0) {
@@ -178,7 +168,7 @@ bot.on("message", async message => {
                     `https://cs.money/check_skin_status?market_hash_name=${encodeURIComponent(
                         skinName
                     )}&appid=730`,
-                    {json: true}
+                    { json: true }
                 ).then(response => {
                     let data = response.body;
 
@@ -194,7 +184,7 @@ bot.on("message", async message => {
                 `https://cs.money/check_skin_status?market_hash_name=${encodeURIComponent(
                     skinName
                 )}&appid=730`,
-                {json: true}
+                { json: true }
             )
                 .then(response => {
                     let data = response.body;
@@ -220,7 +210,7 @@ bot.on("message", async message => {
             `https://cs.money/get_auto_complete?part_name=${encodeURIComponent(
                 skinName
             )}&appid=730`,
-            {json: true}
+            { json: true }
         ).then(response => {
             let data = response.body;
             if (data.length == 0) {
@@ -236,7 +226,7 @@ bot.on("message", async message => {
                 }
             }
             skinName = data[highestIndex];
-            db.findOne({skin: skinName}, function(err, data) {
+            db.findOne({ skin: skinName }, function(err, data) {
                 if (data == null) {
                     data = {
                         skin: skinName,
@@ -247,8 +237,8 @@ bot.on("message", async message => {
                     if (!data.ids.includes(authorid)) {
                         data.ids.push(authorid);
                         db.update(
-                            {skin: skinName},
-                            {skin: skinName, ids: data.ids},
+                            { skin: skinName },
+                            { skin: skinName, ids: data.ids },
                             {},
                             function(err, numReplaced) {}
                         );
