@@ -3,7 +3,7 @@ const botconfig = require("./botconfig.json");
 const got = require("got");
 var fs = require("fs");
 const store = require("nedb");
-const db = new store({filename: "database.db", autoload: true});
+const db = new store({ filename: "./database.db", autoload: true });
 
 let bot;
 
@@ -99,7 +99,7 @@ function checkItemStatus2(docs) {
             `https://cs.money/check_skin_status?market_hash_name=${
                 currentDoc.skin
             }&appid=730`,
-            {json: true}
+            { json: true }
         )
             .then(response => {
                 let data = response.body;
@@ -119,7 +119,7 @@ function checkItemStatus2(docs) {
                         );
                     }
                     Promise.all(userPromises).then(function() {
-                        db.remove({_id: currentDoc._id}, {}, function(
+                        db.remove({ _id: currentDoc._id }, {}, function(
                             err,
                             numRemoved
                         ) {});
@@ -151,7 +151,7 @@ function checkItemStatus() {
                 `https://cs.money/check_skin_status?market_hash_name=${
                     docs[docIndex].skin
                 }&appid=730`,
-                {json: true}
+                { json: true }
             )
                 .then(response => {
                     let data = response.body;
@@ -164,7 +164,7 @@ function checkItemStatus() {
                                     )
                             );
                         }
-                        db.remove({_id: docs[docIndex]._id}, {}, function(
+                        db.remove({ _id: docs[docIndex]._id }, {}, function(
                             err,
                             numRemoved
                         ) {});
