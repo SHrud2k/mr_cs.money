@@ -114,23 +114,29 @@ bot.on("message", async message => {
     }
 
     if (cmd === `${prefix}userroll`) {
-        if (message.member.roles.find("name", "CS.Money")) {
-            var user = message.guild.members
-                .filter(online => online.presence.status === "online")
-                .random();
-            console.log(user.user.bot);
-            if (user.user.bot)
-                return message.channel.send("Whops, that was a bot");
-            message.delete(100);
-            return message.channel.send(
-                `Congrats ${user.user}, you have won our small giveaway!`
-            );
-        } else {
-            message.delete(100);
+        if (!message.member.roles.find("name", "CS.Money"))
             return message.channel.send(
                 "You are not allowed to use this command."
             );
+
+        var user = message.guild.members.filter(
+            online => online.presence.status === "online"
+        );
+        //console.log(user);
+        let winner = user.random();
+        while (!winner.lastMessage && winner.roles.find("name", "CS.Money")) {
+            winner = user.random();
         }
+
+        // if (user.user.bot) {
+        //     message.channel.send("Whops, that was a bot");
+        //     message.delete(1000);
+        //     return;
+        // }
+        message.channel.send(
+            `Congrats ${winner}, you have won our small giveaway!`
+        );
+        message.delete(1000);
     }
 
     if (cmd === `${prefix}status`) {
