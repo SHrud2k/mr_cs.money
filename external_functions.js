@@ -3,8 +3,8 @@ const botconfig = require("./botconfig.json");
 const got = require("got");
 var fs = require("fs");
 const store = require("nedb");
-const db = new store({filename: "database.db", autoload: true});
 
+let db;
 let bot;
 
 const prefix = botconfig.prefix;
@@ -104,14 +104,12 @@ function checkItemStatus2(docs) {
             .then(response => {
                 let data = response.body;
                 if (data.type == "Tradable") {
-                    console.log(currentDoc);
                     var userPromises = [];
                     for (var idIndex in currentDoc.ids) {
                         userPromises.push(
                             bot
                                 .fetchUser(currentDoc.ids[idIndex])
                                 .then(user => {
-                                    console.log(user.id + currentDoc.skin);
                                     user.send(
                                         getRichEmbed(data, currentDoc.skin)
                                     );
@@ -129,9 +127,7 @@ function checkItemStatus2(docs) {
                     checkItemStatus2(docs.slice(1));
                 }
             })
-            .catch(error => {
-                console.log(error);
-            });
+            .catch(error => {});
     }
 }
 
@@ -170,9 +166,7 @@ function checkItemStatus() {
                         ) {});
                     }
                 })
-                .catch(error => {
-                    console.log(error);
-                });
+                .catch(error => {});
         }
     });
 }
@@ -186,7 +180,8 @@ function checkItemStatus() {
 //     startItemCheck,
 //     checkItemStatus
 //};
-module.exports = function(_bot) {
+module.exports = function(_bot, _db) {
+    db = _db;
     bot = _bot;
     return {
         similarity,
