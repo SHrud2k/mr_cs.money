@@ -115,7 +115,12 @@ bot.on("message", async message => {
 
     if (cmd === `${prefix}userroll`) {
         if (message.member.roles.find("name", "CS.Money")) {
-            var user = message.guild.members.random();
+            var user = message.guild.members
+                .filter(online => online.presence.status === "online")
+                .random();
+            console.log(user.user.bot);
+            if (user.user.bot)
+                return message.channel.send("Whops, that was a bot");
             message.delete(100);
             return message.channel.send(
                 `Congrats ${user.user}, you have won our small giveaway!`
