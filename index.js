@@ -1,14 +1,12 @@
 const botconfig = require("./botconfig.json");
 const Discord = require("discord.js");
 const got = require("got");
-
 const bot = new Discord.Client({disableEveryone: true});
-
-const exf = require("./external_functions")(bot);
 var fs = require("fs");
 const store = require("nedb");
-const db = new store({filename: "database.db", autoload: true});
+const db = new store({filename: "./database.db", autoload: true});
 
+const exf = require("./external_functions")(bot, db);
 const prefix = botconfig.prefix;
 
 bot.on("ready", async () => {
@@ -46,6 +44,10 @@ bot.on("message", async message => {
             .addField(
                 `${prefix}shop`,
                 `Post's your cs.money shop on the specific channel\n Usage: ${prefix}shop https://cs.money/#sellerid=YOUR_ID (and also attach an image of your shop)`
+            )
+            .addField(
+                `${prefix}notify`,
+                "Want to be notified when your favourite skin will get out of overstock? You can by executing this command."
             )
             .setColor("#d45f93")
             .setThumbnail(botAvatar);
@@ -267,10 +269,14 @@ bot.on("message", async message => {
 
     if (cmd === `${prefix}shop`) {
         if (
-            !message.member.roles.find(
-                "name",
-                "Trader" || "Senior Trader" || "Contributor" || "CS.Money"
-            )
+            !message.member.roles.some(role => {
+                return [
+                    "Trader",
+                    "Senior Trader",
+                    "Contributor",
+                    "CS.Money"
+                ].includes(role.name);
+            })
         )
             return message.reply("You are not allowed to use this command ;)");
         let messageAuthor = message.author.id;
@@ -280,7 +286,6 @@ bot.on("message", async message => {
             .split(" ")
             .slice(1)
             .join(" ");
-        console.log("link", shopLink);
         if (!shopLink)
             return message.reply("You did not specify your sellerid.");
         if (!attachmentArray)
@@ -290,12 +295,11 @@ bot.on("message", async message => {
             .addField("Link to the shop:", `${shopLink}`)
             .setThumbnail(`${authorAvatar}`)
             .setImage(attachmentArray.url);
-        console.log(attachmentArray, shopLink);
         if (!shopLink.match(/https?\:\/\/([\w\d\.]+)?cs\.money\/#sellerid=\d+/))
             return message.reply(
                 "Please use correct shop link, for example https://cs.money/#sellerid=YOUR_ID"
             );
-        bot.channels.find("name", "sellerid-showcase").send(embedShop);
+        bot.channels.find("name", "🔄sellerid-showcase").send(embedShop);
         message.delete(200);
     }
 });
