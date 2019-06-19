@@ -9,6 +9,7 @@ const db = new store({filename: "./database.db", autoload: true});
 
 const exf = require("./external_functions")(bot, db);
 const prefix = botconfig.prefix;
+const sellerScreenshotsDir = "./sellerScreenshots";
 
 bot.on("ready", async () => {
     let prefix = botconfig.prefix;
@@ -321,7 +322,9 @@ bot.on("message", async message => {
                 }, selector);
 
                 return await page.screenshot({
-                    path: `./sellerScreenshots/${shopLink.split("=")[1]}.png`,
+                    path: `${sellerScreenshotsDir}/${
+                        shopLink.split("=")[1]
+                    }.png`,
                     clip: {
                         x: rect.left - padding,
                         y: rect.top - padding,
@@ -333,7 +336,7 @@ bot.on("message", async message => {
 
             await screenshotDOMElement("#main_container_bot", 16);
             const attachment = new Discord.Attachment(
-                `./sellerScreenshots/${shopLink.split("=")[1]}.png`,
+                `${sellerScreenshotsDir}/${shopLink.split("=")[1]}.png`,
                 `${shopLink.split("=")[1]}.png`
             );
             let embedShop = new Discord.RichEmbed()
@@ -347,5 +350,9 @@ bot.on("message", async message => {
         })();
     }
 });
+
+if (!fs.existsSync(sellerScreenshotsDir)) {
+    fs.mkdirSync(sellerScreenshotsDir);
+}
 
 bot.login(botconfig.token);
