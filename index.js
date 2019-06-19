@@ -1,14 +1,15 @@
 const botconfig = require("./botconfig.json");
 const Discord = require("discord.js");
 const got = require("got");
-const bot = new Discord.Client({disableEveryone: true});
+const bot = new Discord.Client({ disableEveryone: true });
 var fs = require("fs");
 const store = require("nedb");
 const puppeteer = require("puppeteer");
-const db = new store({filename: "./database.db", autoload: true});
+const db = new store({ filename: "./database.db", autoload: true });
 
 const exf = require("./external_functions")(bot, db);
 const prefix = botconfig.prefix;
+const sellerScreenshotsDir = "./sellerScreenshots";
 
 bot.on("ready", async () => {
     let prefix = botconfig.prefix;
@@ -160,7 +161,7 @@ bot.on("message", async message => {
                 `https://cs.money/get_auto_complete?part_name=${encodeURIComponent(
                     skinName
                 )}&appid=730`,
-                {json: true}
+                { json: true }
             ).then(response => {
                 let data = response.body;
                 if (data.length == 0) {
@@ -180,7 +181,7 @@ bot.on("message", async message => {
                     `https://cs.money/check_skin_status?market_hash_name=${encodeURIComponent(
                         skinName
                     )}&appid=730`,
-                    {json: true}
+                    { json: true }
                 ).then(response => {
                     let data = response.body;
 
@@ -196,7 +197,7 @@ bot.on("message", async message => {
                 `https://cs.money/check_skin_status?market_hash_name=${encodeURIComponent(
                     skinName
                 )}&appid=730`,
-                {json: true}
+                { json: true }
             )
                 .then(response => {
                     let data = response.body;
@@ -222,7 +223,7 @@ bot.on("message", async message => {
             `https://cs.money/get_auto_complete?part_name=${encodeURIComponent(
                 skinName
             )}&appid=730`,
-            {json: true}
+            { json: true }
         ).then(response => {
             let data = response.body;
             if (data.length == 0) {
@@ -238,7 +239,7 @@ bot.on("message", async message => {
                 }
             }
             skinName = data[highestIndex];
-            db.findOne({skin: skinName}, function(err, data) {
+            db.findOne({ skin: skinName }, function(err, data) {
                 if (data == null) {
                     data = {
                         skin: skinName,
@@ -249,8 +250,8 @@ bot.on("message", async message => {
                     if (!data.ids.includes(authorid)) {
                         data.ids.push(authorid);
                         db.update(
-                            {skin: skinName},
-                            {skin: skinName, ids: data.ids},
+                            { skin: skinName },
+                            { skin: skinName, ids: data.ids },
                             {},
                             function(err, numReplaced) {}
                         );
@@ -309,7 +310,11 @@ bot.on("message", async message => {
         (async () => {
             const browser = await puppeteer.launch();
             const page = await browser.newPage();
-            page.setViewport({width: 1900, height: 1080, deviceScaleFactor: 2});
+            page.setViewport({
+                width: 1900,
+                height: 1080,
+                deviceScaleFactor: 2
+            });
 
             await page.goto(shopLink, {
                 waitUntil: "networkidle2"
@@ -328,11 +333,13 @@ bot.on("message", async message => {
                         width,
                         height
                     } = element.getBoundingClientRect();
-                    return {left: x, top: y, width, height, id: element.id};
+                    return { left: x, top: y, width, height, id: element.id };
                 }, selector);
 
                 return await page.screenshot({
-                    path: `./sellerScreenshots/${shopLink.split("=")[1]}.png`,
+                    path: `${sellerScreenshotsDir}/${
+                        shopLink.split("=")[1]
+                    }.png`,
                     clip: {
                         x: rect.left - padding,
                         y: rect.top - padding,
@@ -344,7 +351,7 @@ bot.on("message", async message => {
 
             await screenshotDOMElement("#main_container_bot", 16);
             const attachment = new Discord.Attachment(
-                `./sellerScreenshots/${shopLink.split("=")[1]}.png`,
+                `${sellerScreenshotsDir}/${shopLink.split("=")[1]}.png`,
                 `${shopLink.split("=")[1]}.png`
             );
             let embedShop = new Discord.RichEmbed()
@@ -358,5 +365,9 @@ bot.on("message", async message => {
         })();
     }
 });
+
+if (!fs.existsSync(sellerScreenshotsDir)) {
+    fs.mkdirSync(sellerScreenshotsDir);
+}
 
 bot.login(botconfig.token);
