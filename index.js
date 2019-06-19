@@ -1,10 +1,11 @@
 const botconfig = require("./botconfig.json");
 const Discord = require("discord.js");
 const got = require("got");
-const bot = new Discord.Client({ disableEveryone: true });
+const bot = new Discord.Client({disableEveryone: true});
 var fs = require("fs");
 const store = require("nedb");
-const db = new store({ filename: "./database.db", autoload: true });
+const puppeteer = require("puppeteer");
+const db = new store({filename: "./database.db", autoload: true});
 
 const exf = require("./external_functions")(bot, db);
 const prefix = botconfig.prefix;
@@ -15,6 +16,8 @@ bot.on("ready", async () => {
     bot.user.setActivity(`${prefix}help`);
     console.log("Starting ItemCheck");
     exf.startItemCheck();
+    //Use at own risk
+    //exf.lotCheck();
 });
 
 bot.on("message", async message => {
@@ -43,7 +46,7 @@ bot.on("message", async message => {
             )
             .addField(
                 `${prefix}shop`,
-                `Post's your cs.money shop on the specific channel\n Usage: ${prefix}shop https://cs.money/#sellerid=YOUR_ID (and also attach an image of your shop)`
+                `Post's your cs.money shop on the specific channel\n Usage: ${prefix}shop https://cs.money/#sellerid=YOUR_ID`
             )
             .addField(
                 `${prefix}notify`,
@@ -157,7 +160,7 @@ bot.on("message", async message => {
                 `https://cs.money/get_auto_complete?part_name=${encodeURIComponent(
                     skinName
                 )}&appid=730`,
-                { json: true }
+                {json: true}
             ).then(response => {
                 let data = response.body;
                 if (data.length == 0) {
@@ -177,7 +180,7 @@ bot.on("message", async message => {
                     `https://cs.money/check_skin_status?market_hash_name=${encodeURIComponent(
                         skinName
                     )}&appid=730`,
-                    { json: true }
+                    {json: true}
                 ).then(response => {
                     let data = response.body;
 
@@ -193,7 +196,7 @@ bot.on("message", async message => {
                 `https://cs.money/check_skin_status?market_hash_name=${encodeURIComponent(
                     skinName
                 )}&appid=730`,
-                { json: true }
+                {json: true}
             )
                 .then(response => {
                     let data = response.body;
@@ -219,7 +222,7 @@ bot.on("message", async message => {
             `https://cs.money/get_auto_complete?part_name=${encodeURIComponent(
                 skinName
             )}&appid=730`,
-            { json: true }
+            {json: true}
         ).then(response => {
             let data = response.body;
             if (data.length == 0) {
@@ -235,7 +238,7 @@ bot.on("message", async message => {
                 }
             }
             skinName = data[highestIndex];
-            db.findOne({ skin: skinName }, function(err, data) {
+            db.findOne({skin: skinName}, function(err, data) {
                 if (data == null) {
                     data = {
                         skin: skinName,
@@ -246,8 +249,8 @@ bot.on("message", async message => {
                     if (!data.ids.includes(authorid)) {
                         data.ids.push(authorid);
                         db.update(
-                            { skin: skinName },
-                            { skin: skinName, ids: data.ids },
+                            {skin: skinName},
+                            {skin: skinName, ids: data.ids},
                             {},
                             function(err, numReplaced) {}
                         );
@@ -292,26 +295,67 @@ bot.on("message", async message => {
             return message.reply("You are not allowed to use this command ;)");
         let messageAuthor = message.author.id;
         let authorAvatar = message.author.displayAvatarURL;
-        let attachmentArray = message.attachments.array()[0];
         let shopLink = message.content
             .split(" ")
             .slice(1)
             .join(" ");
         if (!shopLink)
             return message.reply("You did not specify your sellerid.");
-        if (!attachmentArray)
-            return message.reply("You did not specify your shop image.");
-        let embedShop = new Discord.RichEmbed()
-            .setDescription(`<@!${messageAuthor}> CS.Money shop`)
-            .addField("Link to the shop:", `${shopLink}`)
-            .setThumbnail(`${authorAvatar}`)
-            .setImage(attachmentArray.url);
         if (!shopLink.match(/https?\:\/\/([\w\d\.]+)?cs\.money\/#sellerid=\d+/))
             return message.reply(
                 "Please use correct shop link, for example https://cs.money/#sellerid=YOUR_ID"
             );
-        bot.channels.find("name", "🔄sellerid-showcase").send(embedShop);
-        message.delete(200);
+
+        (async () => {
+            const browser = await puppeteer.launch();
+            const page = await browser.newPage();
+            page.setViewport({width: 1900, height: 1080, deviceScaleFactor: 2});
+
+            await page.goto(shopLink, {
+                waitUntil: "networkidle2"
+            });
+            await page.waitForSelector(
+                "#main_container_bot[state=filled]" ||
+                    "#main_container_user[state=filled]"
+            );
+
+            async function screenshotDOMElement(selector, padding = 0) {
+                const rect = await page.evaluate(selector => {
+                    const element = document.querySelector(selector);
+                    const {
+                        x,
+                        y,
+                        width,
+                        height
+                    } = element.getBoundingClientRect();
+                    return {left: x, top: y, width, height, id: element.id};
+                }, selector);
+
+                return await page.screenshot({
+                    path: `./sellerScreenshots/${shopLink.split("=")[1]}.png`,
+                    clip: {
+                        x: rect.left - padding,
+                        y: rect.top - padding,
+                        width: rect.width + padding * 2,
+                        height: rect.height + padding * 2
+                    }
+                });
+            }
+
+            await screenshotDOMElement("#main_container_bot", 16);
+            const attachment = new Discord.Attachment(
+                `./sellerScreenshots/${shopLink.split("=")[1]}.png`,
+                `${shopLink.split("=")[1]}.png`
+            );
+            let embedShop = new Discord.RichEmbed()
+                .setDescription(`<@!${messageAuthor}> CS.Money shop`)
+                .addField("Link to the shop:", `${shopLink}`)
+                .setThumbnail(`${authorAvatar}`)
+                .attachFile(attachment)
+                .setImage(`attachment://${shopLink.split("=")[1]}.png`);
+            bot.channels.find("name", "🔄sellerid-showcase").send(embedShop);
+            message.delete(200);
+        })();
     }
 });
 
