@@ -118,18 +118,29 @@ bot.on("message", async message => {
     }
 
     if (cmd === `${prefix}userroll`) {
-        if (message.member.roles.find("name", "CS.Money")) {
-            var user = message.guild.members.random();
-            message.delete(100);
-            return message.channel.send(
-                `Congrats ${user.user}, you have won our small giveaway!`
-            );
-        } else {
-            message.delete(100);
+        if (!message.member.roles.find("name", "CS.Money"))
             return message.channel.send(
                 "You are not allowed to use this command."
             );
+
+        var user = message.guild.members.filter(
+            online => online.presence.status === "online"
+        );
+        //console.log(user);
+        let winner = user.random();
+        while (!winner.lastMessage && winner.roles.find("name", "CS.Money")) {
+            winner = user.random();
         }
+
+        // if (user.user.bot) {
+        //     message.channel.send("Whops, that was a bot");
+        //     message.delete(1000);
+        //     return;
+        // }
+        message.channel.send(
+            `Congrats ${winner}, you have won our small giveaway!`
+        );
+        message.delete(1000);
     }
 
     if (cmd === `${prefix}status`) {
@@ -299,11 +310,12 @@ bot.on("message", async message => {
         (async () => {
             const browser = await puppeteer.launch();
             const page = await browser.newPage();
-            page.setViewport({width: 1900, height: 1080, deviceScaleFactor: 2});
+            page.setViewport({width: 4000, height: 1080, deviceScaleFactor: 2});
 
             await page.goto(shopLink, {
                 waitUntil: "networkidle2"
             });
+
             await page.waitForSelector(
                 "#main_container_bot[state=filled]" ||
                     "#main_container_user[state=filled]"
@@ -329,24 +341,28 @@ bot.on("message", async message => {
                         x: rect.left - padding,
                         y: rect.top - padding,
                         width: rect.width + padding * 2,
-                        height: rect.height + padding * 2
+                        height: Math.min(rect.height + padding * 2, 585)
                     }
                 });
             }
 
-            await screenshotDOMElement("#main_container_bot", 16);
-            const attachment = new Discord.Attachment(
-                `${sellerScreenshotsDir}/${shopLink.split("=")[1]}.png`,
-                `${shopLink.split("=")[1]}.png`
-            );
-            let embedShop = new Discord.RichEmbed()
-                .setDescription(`<@!${messageAuthor}> CS.Money shop`)
-                .addField("Link to the shop:", `${shopLink}`)
-                .setThumbnail(`${authorAvatar}`)
-                .attachFile(attachment)
-                .setImage(`attachment://${shopLink.split("=")[1]}.png`);
-            bot.channels.find("name", "🔄sellerid-showcase").send(embedShop);
-            message.delete(200);
+            setTimeout(async function() {
+                await screenshotDOMElement("#main_container_bot", 16);
+                const attachment = new Discord.Attachment(
+                    `${sellerScreenshotsDir}/${shopLink.split("=")[1]}.png`,
+                    `${shopLink.split("=")[1]}.png`
+                );
+                let embedShop = new Discord.RichEmbed()
+                    .setDescription(`<@!${messageAuthor}> CS.Money shop`)
+                    .addField("Link to the shop:", `${shopLink}`)
+                    .setThumbnail(`${authorAvatar}`)
+                    .attachFile(attachment)
+                    .setImage(`attachment://${shopLink.split("=")[1]}.png`);
+                bot.channels
+                    .find("name", "🔄sellerid-showcase")
+                    .send(embedShop);
+                message.delete(200);
+            }, 1000 * 2);
         })();
     }
 });
