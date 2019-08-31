@@ -53,6 +53,10 @@ bot.on("message", async message => {
                 `${prefix}notify`,
                 "Want to be notified when your favourite skin will get out of overstock? You can by executing this command."
             )
+            .addField(
+                `${prefix}online`,
+                "Check the status of the website services"
+            )
             .setColor("#d45f93")
             .setThumbnail(botAvatar);
         return message.channel.send(embedMessage);
@@ -82,7 +86,7 @@ bot.on("message", async message => {
             .setDescription("Wrong parametres!")
             .addField(
                 "Please try again, with this example:",
-                "csm.report {USER_TO_REPORT} {REASON_MESSAGE}"
+                "cs.report {USER_TO_REPORT} {REASON_MESSAGE}"
             );
         if (userMessage) {
             const content = userMessage[1].trim().replace(/\s{2,}/g, " ");
@@ -280,6 +284,142 @@ bot.on("message", async message => {
             embed: embedResponse,
             files: ["./support_placement.png"]
         });
+    }
+
+    if (cmd === `${prefix}online`) {
+        got(`https://cs.money/`)
+            .then(response => {
+                let data = response.body;
+                var ex = new RegExp('"work_statuses":{([^}]+)}');
+                var exres = data
+                    .match(ex)[0]
+                    .replace('"work_statuses":', "[")
+                    .concat("]");
+                var json = JSON.parse(exres)[0];
+
+                const payment = [
+                    "disable_g2a",
+                    "disable_paymaster",
+                    "disable_qiwi",
+                    "disable_walletone",
+                    "disable_tinkoff"
+                ];
+                var paymentcount = 5;
+                for (var i = 0; i < payment.length; i++) {
+                    if (json[payment[i]]) {
+                        paymentcount--;
+                    }
+                }
+                const trading = [
+                    "disable_deposit",
+                    "disable_withdraw",
+                    "disable_sell"
+                ];
+                var tradingcount = 3;
+                for (var i = 0; i < trading.length; i++) {
+                    if (json[trading[i]]) {
+                        tradingcount--;
+                    }
+                }
+                let misc = ["fuckup", "steam_problems"];
+                var misccount = 2;
+                for (var i = 0; i < misc.length; i++) {
+                    if (json[misc[i]]) {
+                        misccount--;
+                    }
+                }
+                let embedResponse = new Discord.RichEmbed()
+                    .setColor("#d45f93")
+                    .setThumbnail(bot.user.displayAvatarURL)
+                    .setTitle("CS.Money service overview")
+                    .addField(
+                        "Maintenance",
+                        json["maintenance"]
+                            ? `Currently under maintenance`
+                            : `Currently not under maintenance`
+                    )
+                    .addField(
+                        "Payment (" + paymentcount + "/5)",
+                        paymentcount == 5
+                            ? `All payment services are running ✔️`
+                            : `Not all services are running ❌`
+                    )
+                    .addField(
+                        "Trading (" + tradingcount + "/3)",
+                        tradingcount == 3
+                            ? `All trading services are running ✔️`
+                            : `Not all services are running ❌`
+                    )
+                    .addField(
+                        "Other (" + misccount + "/2)",
+                        misccount == 2
+                            ? `All other services are running ✔️`
+                            : `Not all services are running ❌`
+                    );
+                message.reply(embedResponse);
+            })
+            .catch(error => {
+                console.log(error);
+                message.reply("Error while getting Website status");
+            });
+    }
+
+    if (cmd === `${prefix}stats`) {
+        got(`https://cs.money/`)
+            .then(response => {
+                let data = response.body;
+                //[{"new_users_per_day":6224,"total_count_offers":67681385,"total_count_users":4695918,"user_online":"4289","array_offers_stats":[67681299,67681306,67681312,67681314,67681319,67681327,67681348,67681357,67681372,67681379,67681385]}]
+                var ex = new RegExp('"list_stats":{([^}]+)}');
+                var exres = data
+                    .match(ex)[0]
+                    .replace('"list_stats":', "[")
+                    .concat("]");
+                var json = JSON.parse(exres)[0];
+
+                let embedResponse = new Discord.RichEmbed()
+                    .setColor("#d45f93")
+                    .setThumbnail(bot.user.displayAvatarURL)
+                    .setTitle("CS.Money stats overview")
+                    .addField(
+                        "User statistics",
+                        `Online users: ${json[`user_online`]}\nUnique users: ${
+                            json[`total_count_users`]
+                        }\nNew users today: ${json[`new_users_per_day`]}`
+                    )
+                    .addField(
+                        "Trade statistics",
+                        `Succesfull trades: ${
+                            json[`total_count_offers`]
+                        }\nTrades in the last 5 seconds: ${json[
+                            `array_offers_stats`
+                        ][10] - json[`array_offers_stats`][9]}`
+                    );
+
+                /*.addField(json[`user_online`], "ONLINE USERS", true)
+                    .addField(
+                        json[`array_offers_stats`][10] -
+                            json[`array_offers_stats`][9],
+                        "TRADES IN THE LAST 5 SECONDS",
+                        true
+                    )
+                    .addField(json[`total_count_users`], "LOYAL USERS", true)
+                    .addField(
+                        json[`total_count_offers`],
+                        "SUCCESFUL TRADES",
+                        true
+                    )
+                    .addField(
+                        json[`new_users_per_day`],
+                        "NEW USERS TODAY",
+                        true
+                    );*/
+
+                message.reply(embedResponse);
+            })
+            .catch(error => {
+                console.log(error);
+                message.reply("Error while getting Website status");
+            });
     }
 
     if (cmd === `${prefix}shop`) {
